@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// npx prisma format to format 
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  // default attributes
+  id             Int              @id @default(autoincrement())
+  email          String           @unique
+  phone          String?          @unique //how to handle validation 
+  userName       String           @unique
+  password       String
+  firstName      String           @db.VarChar(20)
+  lastName       String           @db.VarChar(20)
+  image          String           @default("https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png")
+  isAdmin        Boolean          @default(false)
+  // attributes from relations
+  posts          Post[]
+  comments       Comment[]
+  likedPosts     Like[] // from many to many
+  favouritePosts FavouritePosts[] //from many to many
+  replyOnComment Reply[] //from many to many
+
+  // from recursive relationship
+  followers Follow[] @relation("follower")
+  following Follow[] @relation("following")
+}
+
+model Post {
+  id                   Int              @id @default(autoincrement())
+  content              String
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  Poster               String
+  title                String           @db.VarChar(100)
+  writer               User             @relation(fields: [writerId], references: [id])
+  writerId             Int
+  comment              Comment[]
+  userLikedPost        Like[] // from many to many 
+  userAddedToFavourite FavouritePosts[] //from many to many
+  category             PostCategory[] //from many to many
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int
+
+  userReplyToComment Reply[] //from many to many
+}
+
+model Category {
+  id    Int            @id @default(autoincrement())
+  name  String         @db.VarChar(30)
+  posts PostCategory[] //from many to many
+}
+
+// Many to many relationships
+model Like {
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  post   Post @relation(fields: [postId], references: [id])
+  postId Int
+
+  @@id([userId, postId])
+}
+
+model FavouritePosts {
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  post   Post @relation(fields: [postId], references: [id])
+  postId Int
+
+  @@id([userId, postId])
+}
+
+model Reply {
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int
+  post      Comment @relation(fields: [commentId], references: [id])
+  commentId Int
+
+  content String
+
+  @@id([userId, commentId])
+}
+
+model PostCategory {
+  post       Post     @relation(fields: [postId], references: [id])
+  postId     Int
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+
+  @@id([postId, categoryId])
+}
+
+// recursive relationship
+model Follow {
+  following   User @relation("following", fields: [followingId], references: [id])
+  followingId Int
+  follower    User @relation("follower", fields: [followerId], references: [id])
+  followerId  Int
+
+  @@id([followerId, followingId])
+}
