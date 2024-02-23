@@ -3,14 +3,17 @@ import { PrismaClient, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { AppError } from '../utils/AppError';
 import catchAsync from '../utils/catchAsync';
-import { validationsignup } from '../validators/authValidator';
+import {
+  validationSignup,
+  validationSignin,
+} from '../validators/authValidator';
 import { createSendToken } from '../utils/sendToken';
 
 const prisma = new PrismaClient();
 
 export const signup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { error } = validationsignup(req.body);
+    const { error } = validationSignup(req.body);
 
     if (error) {
       return next(new AppError(error.details[0].message, 400));
@@ -36,5 +39,25 @@ export const signup = catchAsync(
     });
 
     createSendToken(newUser, 201, res);
+  }
+);
+
+export const login = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { error } = validationSignin(req.body);
+
+    if (error)
+      return next(new AppError('email and password must be send.', 400));
+
+    const { email, password } = req.body;
+
+    const user: User | null = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user || !(await bcrypt.compare(password, user.password)))
+      return next(new AppError('email or password is incorrect.', 401));
+
+    createSendToken(user, 200, res);
   }
 );

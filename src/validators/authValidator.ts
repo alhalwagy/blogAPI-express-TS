@@ -1,6 +1,6 @@
 import joi from 'joi';
 
-export function validationsignup(obj: Object) {
+export function validationSignup(obj: Object) {
   const schema = joi.object({
     email: joi.string().trim().required().email(),
 
@@ -8,6 +8,15 @@ export function validationsignup(obj: Object) {
     password: joi.string().required().min(8),
     firstName: joi.string().required().max(30),
     lastName: joi.string().required().max(30),
+  });
+
+  return schema.validate(obj);
+}
+
+export function validationSignin(obj: Object) {
+  const schema = joi.object({
+    email: joi.string().required().trim(),
+    password: joi.string().required(),
   });
 
   return schema.validate(obj);
