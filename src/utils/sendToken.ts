@@ -1,8 +1,8 @@
 import { User } from '@prisma/client';
-
 import { Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { promisify } from 'util';
+
+import { exclude } from '../validators/returnUserValidation';
 
 const signToken = (id: number): string => {
   if (!process.env.JWT_SECRET) {
@@ -22,11 +22,12 @@ export const createSendToken = (
 ) => {
   const token: string = signToken(user.id);
 
+  const excludedUser = exclude(user, ['password']);
   res.status(statusCode).json({
     status: 'success',
     token,
     data: {
-      user,
+      excludedUser,
     },
   });
 };

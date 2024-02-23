@@ -45,7 +45,11 @@ export default (
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, req, res);
+    let error = Object.create(err);
+    if (error.name === 'JsonWebTokenError') error = handleJsonWebTokenError();
+    if (error.name === 'TokenExpiredError') error = handleTokenExpiredError();
+
+    sendErrorDev(error, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = Object.create(err); // Create a shallow copy to avoid mutating the original error object
 

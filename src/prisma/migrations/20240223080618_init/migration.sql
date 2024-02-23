@@ -2,11 +2,15 @@
 CREATE TABLE `User` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `email` VARCHAR(191) NOT NULL,
-    `phone` VARCHAR(191) NOT NULL,
+    `phone` VARCHAR(191) NULL,
     `userName` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `passwordChangedAt` DATETIME(3) NULL,
+    `isVerified` BOOLEAN NOT NULL DEFAULT false,
+    `verificationToken` VARCHAR(191) NOT NULL,
     `firstName` VARCHAR(20) NOT NULL,
     `lastName` VARCHAR(20) NOT NULL,
-    `image` VARCHAR(191) NOT NULL,
+    `image` VARCHAR(191) NOT NULL DEFAULT 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png',
     `isAdmin` BOOLEAN NOT NULL DEFAULT false,
 
     UNIQUE INDEX `User_email_key`(`email`),

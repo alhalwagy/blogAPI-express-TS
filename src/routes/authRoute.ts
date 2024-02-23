@@ -1,5 +1,12 @@
 import express from 'express';
-import { login, signup } from '../controllers/authController';
+import {
+  changePassword,
+  forgetPassword,
+  login,
+  signup,
+  updateMe,
+  verifyEmailToken,
+} from '../controllers/authController';
 import { protect } from '../middlewares/protectMiddleware';
 
 export const authRouter = express.Router();
@@ -7,4 +14,8 @@ export const authRouter = express.Router();
 authRouter.route('/signup').post(signup);
 authRouter.route('/login').post(login);
 
-authRouter.route('/').get(protect);
+authRouter.route('/changemypassword').patch(protect, changePassword);
+authRouter.route('/updatemyprofile').patch(protect, updateMe);
+
+authRouter.route('/verify/:token').patch(verifyEmailToken);
+authRouter.route('/forgetpassword/:token').get(forgetPassword);

@@ -17,21 +17,26 @@ datasource db {
 
 model User {
   // default attributes
-  id             Int              @id @default(autoincrement())
-  email          String           @unique
-  phone          String?          @unique //how to handle validation 
-  userName       String           @unique
-  password       String
-  firstName      String           @db.VarChar(20)
-  lastName       String           @db.VarChar(20)
-  image          String           @default("https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png")
-  isAdmin        Boolean          @default(false)
+  id                   Int              @id @default(autoincrement())
+  email                String           @unique
+  phone                String?          @unique //how to handle validation 
+  userName             String           @unique
+  password             String
+  passwordChangedAt    DateTime?
+  isVerified           Boolean          @default(false)
+  verificationToken    String?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  firstName            String           @db.VarChar(20)
+  lastName             String           @db.VarChar(20)
+  image                String           @default("https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png")
+  isAdmin              Boolean          @default(false)
   // attributes from relations
-  posts          Post[]
-  comments       Comment[]
-  likedPosts     Like[] // from many to many
-  favouritePosts FavouritePosts[] //from many to many
-  replyOnComment Reply[] //from many to many
+  posts                Post[]
+  comments             Comment[]
+  likedPosts           Like[] // from many to many
+  favouritePosts       FavouritePosts[] //from many to many
+  replyOnComment       Reply[] //from many to many
 
   // from recursive relationship
   followers Follow[] @relation("follower")

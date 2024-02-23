@@ -8,7 +8,7 @@ import { checkJwtSecret } from '../utils/getJWTSecretFromEnv';
 import { Payload } from '@prisma/client/runtime/library';
 import { exclude } from '../validators/returnUserValidation';
 
-interface CustomRequest extends Request {
+export interface CustomRequest extends Request {
   user?: Partial<User>;
 }
 
@@ -24,10 +24,11 @@ export const protect = catchAsync(
       );
 
     // must declare generics that have been passed for promisified function
-    const decoded: Payload<string> = await promisify<string, string>(
+    const decoded: Payload<number> = await promisify<string, string>(
       jwt.verify
     )(token as string, checkJwtSecret() as string);
 
+    console.log(decoded.iat);
     const currentUser = await prisma.user.findUnique({
       where: { id: decoded.id },
     });
@@ -39,9 +40,24 @@ export const protect = catchAsync(
         )
       );
     }
+
+    if (currentUser.passwordChangedAt) {
+      const changedTimestamp = Math.floor(
+        currentUser.passwordChangedAt.getTime() / 1000
+      );
+
+      if (decoded.iat < changedTimestamp) {
+        return next(
+          new AppError(
+            'User recently changed password. Please log in again.',
+            401
+          )
+        );
+      }
+    }
+
     const userWithoutPassword = exclude(currentUser, ['password', 'phone']);
     req.user = userWithoutPassword;
-    console.log(req.user);
     next();
   }
 );
