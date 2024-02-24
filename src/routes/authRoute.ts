@@ -3,6 +3,7 @@ import {
   changePassword,
   forgetPassword,
   login,
+  resetPassword,
   signup,
   updateMe,
   verifyEmailToken,
@@ -18,4 +19,5 @@ authRouter.route('/changemypassword').patch(protect, changePassword);
 authRouter.route('/updatemyprofile').patch(protect, updateMe);
 
 authRouter.route('/verify/:token').patch(verifyEmailToken);
-authRouter.route('/forgetpassword/:token').get(forgetPassword);
+authRouter.route('/forgetpassword').get(forgetPassword);
+authRouter.route('/resetpassword/:token').patch(resetPassword);

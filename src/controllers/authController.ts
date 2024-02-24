@@ -31,7 +31,14 @@ export const signup = catchAsync(
       where: { email },
     });
 
-    if (user) return next(new AppError('User is already exist.', 400));
+    if (user) {
+      if (!user.isVerified) {
+        const message = await verifyEmail(user.verificationToken);
+
+        await sendEmail(user.email, 'verify Your Email', message);
+      }
+      return next(new AppError('User is already exist.', 400));
+    }
 
     const hashPassword = await bcrypt.hash(password, 12);
 
@@ -70,8 +77,8 @@ export const login = catchAsync(
 
     if (!user || !(await bcrypt.compare(password, user.password)))
       return next(new AppError('email or password is incorrect.', 401));
-
-    if (!user.isVerified || user.verificationToken) {
+    console.log(user);
+    if (!user.isVerified || user.verificationToken != null) {
       return next(new AppError('Please verify your account', 400));
     }
 
@@ -144,12 +151,12 @@ export const updateMe = catchAsync(
 export const verifyEmailToken = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     const user = await prisma.user.findFirst({
-      where: { verificationToken: req.params.taken },
+      where: { verificationToken: req.params.token },
     });
     if (!user) {
       return next(new AppError('Wrong vrification url.', 401));
     }
-
+    console.log(user);
     const updatedUser = await prisma.user.update({
       where: { email: user.email },
       data: {
@@ -213,7 +220,7 @@ export const forgetPassword = catchAsync(
   }
 );
 
-export const resetPasswordHandler = catchAsync(
+export const resetPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { error } = validationresetPassword(req.body);
     if (error) return next(new AppError(error.details[0].message, 400));
