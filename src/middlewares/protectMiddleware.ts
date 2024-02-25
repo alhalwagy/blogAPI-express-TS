@@ -10,6 +10,7 @@ import { exclude } from '../validators/returnUserValidation';
 
 export interface CustomRequest extends Request {
   user?: Partial<User>;
+  file?: any;
 }
 
 const prisma = new PrismaClient();

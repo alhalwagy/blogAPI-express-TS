@@ -1,17 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { User } from '@prisma/client';
-import catchAsync from '../utils/catchAsync';
-import { validationSignup } from '../validators/authValidator';
-import { AppError } from '../utils/AppError';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import path from 'path';
+import fs from 'fs';
+
+import { AppError } from '../utils/AppError';
+import catchAsync from '../utils/catchAsync';
+import { validationSignup } from '../validators/authValidator';
 import { sendEmail } from '../utils/emails/email';
 import { verifyEmail } from '../utils/emails/verifyEmailTemplates';
 import {
   excludeFromUsersArray,
   exclude,
 } from '../validators/returnUserValidation';
+import { CustomRequest } from '../middlewares/protectMiddleware';
+import {
+  cloudinaryRemoveImage,
+  cloudinaryUploadImage,
+} from '../utils/cloudinaryImage';
 
 const prisma = new PrismaClient();
 
@@ -112,12 +120,15 @@ export const updateUser = catchAsync(
 
 export const deleteUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    await prisma.user
-      .delete({ where: { id: parseInt(req.params.id) } })
-      .then(() =>
-        res.status(204).json({ message: 'user has been deleted successfuly.' })
-      )
-      .catch(() => next(new AppError('User not found.', 404)));
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+
+    if (!user) return next(new AppError('User not found.', 404));
+    if (user.imageId !== '') await cloudinaryRemoveImage(user.imageId!);
+
+    // const posts = await prisma.post.findMany({
+    //   where: { writerId: parseInt(id) },
+    // });
   }
 );
 
@@ -143,5 +154,38 @@ export const searchUsers = catchAsync(
     } else {
       res.status(200).json({});
     }
+  }
+);
+
+export const updateUserImage = catchAsync(
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    if (!req.file) return next(new AppError('No image provided.', 400));
+    console.log();
+    const imagePath = path.join(__dirname, `../../images/${req.file.filename}`);
+    const result = await cloudinaryUploadImage(imagePath);
+
+    const user = await prisma.user.findUnique({ where: { id: req.user?.id } });
+    console.log(user);
+    if (user?.imageId !== '') {
+      await cloudinaryRemoveImage(user?.imageId!);
+    }
+    if (result) {
+      user!.image = (result as any).secure_url;
+      user!.imageId = (result as any).public_id;
+    }
+    console.log(user);
+    await prisma.user.update({
+      where: { id: user?.id },
+      data: { image: user?.image, imageId: user?.imageId },
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'image profile uploaded successfuly.',
+      url: result?.secure_url,
+      imageid: result?.public_id,
+    });
+
+    fs.unlinkSync(imagePath);
   }
 );
