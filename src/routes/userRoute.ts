@@ -13,17 +13,27 @@ import {
 } from '../controllers/userController';
 import { uploadUserImage, resizeUserPhoto } from '../utils/multer';
 import { protect } from '../middlewares/protectMiddleware';
+import { restrictToAdmin } from '../middlewares/authorizationMiddleware';
 
 export const userRouter = express.Router();
 
-userRouter.route('/').get(getAllUsers).post(createUser);
+userRouter.use(protect);
+
+userRouter
+  .route('/')
+  .get(restrictToAdmin, getAllUsers)
+  .post(restrictToAdmin, createUser);
 
 userRouter.route('/finduser/').get(searchUsers);
 
-userRouter.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
+userRouter
+  .route('/:id')
+  .get(getUser)
+  .patch(updateUser)
+  .delete(restrictToAdmin, deleteUser);
 
-userRouter.route('/activateaccount').patch(protect, changetActiveAccount);
+userRouter.route('/activateaccount').patch(changetActiveAccount);
 
 userRouter
   .route('/uploaduserimage')
-  .post(protect, uploadUserImage, resizeUserPhoto, updateUserImage);
+  .post(uploadUserImage, resizeUserPhoto, updateUserImage);

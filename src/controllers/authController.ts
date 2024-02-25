@@ -10,7 +10,7 @@ import {
   validationChangePassword,
 } from '../validators/authValidator';
 import { createSendToken } from '../utils/sendToken';
-import { CustomRequest } from '../middlewares/protectMiddleware';
+import { CustomRequest } from '../utils/interfaces/CustomRequest';
 import { exclude } from '../validators/returnUserValidation';
 import { sendEmail } from '../utils/emails/email';
 import { verifyEmail } from '../utils/emails/verifyEmailTemplates';

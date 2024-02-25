@@ -1,6 +1,6 @@
 import multer from 'multer';
 import path from 'path';
-import { CustomRequest } from '../middlewares/protectMiddleware';
+import { CustomRequest } from '../utils/interfaces/CustomRequest';
 import { AppError } from './AppError';
 import catchAsync from './catchAsync';
 import sharp from 'sharp';

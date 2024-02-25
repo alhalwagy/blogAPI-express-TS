@@ -15,7 +15,7 @@ import {
   excludeFromUsersArray,
   exclude,
 } from '../validators/returnUserValidation';
-import { CustomRequest } from '../middlewares/protectMiddleware';
+import { CustomRequest } from '../utils/interfaces/CustomRequest';
 import {
   cloudinaryRemoveImage,
   cloudinaryUploadImage,

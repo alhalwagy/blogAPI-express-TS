@@ -7,11 +7,7 @@ import { promisify } from 'util';
 import { checkJwtSecret } from '../utils/getJWTSecretFromEnv';
 import { Payload } from '@prisma/client/runtime/library';
 import { exclude } from '../validators/returnUserValidation';
-
-export interface CustomRequest extends Request {
-  user?: Partial<User>;
-  file?: any;
-}
+import { CustomRequest } from '../utils/interfaces/CustomRequest';
 
 const prisma = new PrismaClient();
 

@@ -9,6 +9,7 @@ import {
   verifyEmailToken,
 } from '../controllers/authController';
 import { protect } from '../middlewares/protectMiddleware';
+import { restrictToAdmin } from '../middlewares/authorizationMiddleware';
 
 export const authRouter = express.Router();
 
