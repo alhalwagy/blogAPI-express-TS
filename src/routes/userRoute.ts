@@ -26,14 +26,14 @@ userRouter
 
 userRouter.route('/finduser/').get(searchUsers);
 
+userRouter.route('/activateaccount/').patch(changetActiveAccount);
+
+userRouter
+  .route('/uploaduserimage')
+  .post(uploadUserImage, resizeUserPhoto, updateUserImage);
+
 userRouter
   .route('/:id')
   .get(getUser)
   .patch(updateUser)
   .delete(restrictToAdmin, deleteUser);
-
-userRouter.route('/activateaccount').patch(changetActiveAccount);
-
-userRouter
-  .route('/uploaduserimage')
-  .post(uploadUserImage, resizeUserPhoto, updateUserImage);

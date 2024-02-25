@@ -148,6 +148,7 @@ export const searchUsers = catchAsync(
           phone: {
             contains: phone?.toString(),
           },
+          isActive: true,
         },
       });
       res.status(200).json({ users });
@@ -193,6 +194,8 @@ export const updateUserImage = catchAsync(
 export const changetActiveAccount = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     let user;
+
+    console.log(req.user);
     if (req.user?.isActive) {
       user = await prisma.user.update({
         where: { id: req.user?.id },
