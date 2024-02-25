@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  changetActiveAccount,
   deleteUser,
   searchUsers,
   updateUser,
@@ -20,6 +21,8 @@ userRouter.route('/').get(getAllUsers).post(createUser);
 userRouter.route('/finduser/').get(searchUsers);
 
 userRouter.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
+
+userRouter.route('/activateaccount').patch(protect, changetActiveAccount);
 
 userRouter
   .route('/uploaduserimage')

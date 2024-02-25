@@ -25,6 +25,7 @@ model User {
   passwordChangedAt    DateTime?
   isVerified           Boolean          @default(false)
   verificationToken    String?
+  isActive             Boolean          @default(true)
   passwordResetToken   String?
   passwordResetExpires DateTime?
   firstName            String           @db.VarChar(20)

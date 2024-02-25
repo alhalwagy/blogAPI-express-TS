@@ -189,3 +189,28 @@ export const updateUserImage = catchAsync(
     fs.unlinkSync(imagePath);
   }
 );
+
+export const changetActiveAccount = catchAsync(
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    let user;
+    if (req.user?.isActive) {
+      user = await prisma.user.update({
+        where: { id: req.user?.id },
+        data: { isActive: false },
+      });
+    } else {
+      user = await prisma.user.update({
+        where: { id: req.user?.id },
+        data: { isActive: true },
+      });
+    }
+    if (!user) {
+      return next(new AppError('User not found.', 404));
+    }
+    res.status(200).json({
+      status: 'success',
+      message: 'account has been un activated.',
+      data: exclude(user, ['password']),
+    });
+  }
+);
