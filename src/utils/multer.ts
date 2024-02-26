@@ -31,4 +31,17 @@ export const resizeUserPhoto = catchAsync(
   }
 );
 
-export const uploadUserImage = upload.single('image');
+export const uploadImage = upload.single('image');
+
+export const resizePostPhoto = catchAsync(
+  async (req: CustomRequest, res, next) => {
+    if (!req.file) return next();
+
+    req.file.filename = `post-${req.user?.id}-${Date.now()}.jpeg`;
+    await sharp(req.file.buffer)
+      .toFormat('jpeg')
+      .jpeg({ quality: 90 })
+      .toFile(path.join(__dirname, `../../images/${req.file.filename}`));
+    next();
+  }
+);

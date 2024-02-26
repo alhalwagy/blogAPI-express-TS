@@ -49,15 +49,16 @@ model Post {
   id                   Int              @id @default(autoincrement())
   content              String
   createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-  Poster               String
+  updatedAt            DateTime?        @updatedAt
+  image                String?
+  imageId              String?
   title                String           @db.VarChar(100)
-  writer               User             @relation(fields: [writerId], references: [id])
+  writer               User             @relation(fields: [writerId], references: [id], onDelete: Cascade)
   writerId             Int
   comment              Comment[]
   userLikedPost        Like[] // from many to many 
   userAddedToFavourite FavouritePosts[] //from many to many
-  category             PostCategory[] //from many to many
+  category             Category[] //from many to many
 }
 
 model Comment {
@@ -75,8 +76,8 @@ model Comment {
 
 model Category {
   id    Int            @id @default(autoincrement())
-  name  String         @db.VarChar(30)
-  posts PostCategory[] //from many to many
+  name  String         @unique
+  posts Post[] //from many to many
 }
 
 // Many to many relationships
@@ -109,14 +110,14 @@ model Reply {
   @@id([userId, commentId])
 }
 
-model PostCategory {
-  post       Post     @relation(fields: [postId], references: [id])
-  postId     Int
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId Int
+// model PostCategory {
+//   post       Post     @relation(fields: [postId], references: [id])
+//   postId     Int
+//   category   Category @relation(fields: [categoryId], references: [id])
+//   categoryId Int
 
-  @@id([postId, categoryId])
-}
+//   @@id([postId, categoryId])
+// }
 
 // recursive relationship
 model Follow {

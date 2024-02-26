@@ -11,7 +11,7 @@ import {
   getAllUsers,
   getUser,
 } from '../controllers/userController';
-import { uploadUserImage, resizeUserPhoto } from '../utils/multer';
+import { uploadImage, resizeUserPhoto } from '../utils/multer';
 import { protect } from '../middlewares/protectMiddleware';
 import { restrictToAdmin } from '../middlewares/authorizationMiddleware';
 
@@ -30,7 +30,7 @@ userRouter.route('/activateaccount/').patch(changetActiveAccount);
 
 userRouter
   .route('/uploaduserimage')
-  .post(uploadUserImage, resizeUserPhoto, updateUserImage);
+  .post(uploadImage, resizeUserPhoto, updateUserImage);
 
 userRouter
   .route('/:id')
