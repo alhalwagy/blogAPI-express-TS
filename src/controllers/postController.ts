@@ -3,9 +3,15 @@ import { Response, NextFunction } from 'express';
 import { CustomRequest } from '../utils/interfaces/CustomRequest';
 import { AppError } from '../utils/AppError';
 import catchAsync from '../utils/catchAsync';
-import { createPostValidation } from '../validators/postValidation';
+import {
+  createPostValidation,
+  updatePostValidation,
+} from '../validators/postValidation';
 import path from 'path';
-import { cloudinaryUploadImage } from '../utils/cloudinaryImage';
+import {
+  cloudinaryRemoveImage,
+  cloudinaryUploadImage,
+} from '../utils/cloudinaryImage';
 import fs from 'fs';
 
 const prisma = new PrismaClient();
@@ -147,9 +153,160 @@ export const getPost = catchAsync(
 );
 
 export const updatePost = catchAsync(
-  async (req: CustomRequest, res: Response, next: NextFunction) => {}
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const { error } = updatePostValidation(req.body);
+    if (error) return next(new AppError(error.details[0].message, 400));
+
+    const { title, content, categoryIds } = req.body;
+    const post = await prisma.post.findUnique({
+      where: {
+        id: parseInt(req.params.id),
+      },
+    });
+
+    if (!post) return next(new AppError('post not found.', 404));
+    if (post.writerId != req.user?.id) {
+      return next(
+        new AppError('you dont have permission to edit this post', 403)
+      );
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: {
+        id: post.id,
+      },
+      data: {
+        ...(title && { title }),
+        ...(content && { content }),
+        ...(categoryIds && {
+          category: {
+            connect: (categoryIds as []).map((categoryId) => ({
+              id: categoryId,
+            })),
+          },
+        }),
+      },
+      include: {
+        category: true,
+      },
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        updatedPost,
+      },
+    });
+  }
 );
 
 export const deletePost = catchAsync(
-  async (req: CustomRequest, res: Response, next: NextFunction) => {}
+  async (
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> => {
+    const id = parseInt(req.params.id);
+
+    const post = await prisma.post.findUnique({
+      where: { id },
+    });
+    if (!post) return next(new AppError('post not found.', 404));
+
+    if (req.user?.isAdmin || req.user?.id === post.writerId) {
+      if (post.imageId) await cloudinaryRemoveImage(post.imageId);
+      await prisma.comment.deleteMany({
+        where: {
+          postId: id,
+        },
+      });
+
+      await prisma.like.deleteMany({
+        where: { postId: id },
+      });
+
+      await prisma.post.delete({ where: { id } });
+
+      return res.status(204).json({
+        message: 'post successfuly deleted.',
+      });
+    } else {
+      return next(
+        new AppError('you dont have permission to edit this post', 403)
+      );
+    }
+  }
+);
+
+export const updateImagePost = catchAsync(
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    if (!req.file) {
+      return next(new AppError('no image provided.', 400));
+    }
+
+    const id = parseInt(req.params.id);
+
+    const post = await prisma.post.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!post) return next(new AppError('post not found.', 404));
+
+    if (req.user?.id != post.writerId) {
+      return next(
+        new AppError('you dont have permission to edit this post', 403)
+      );
+    }
+
+    if (post.imageId) await cloudinaryRemoveImage(post.imageId);
+
+    const imagePath = path.join(__dirname, `../../images/${req.file.filename}`);
+    console.log(imagePath);
+    const result = await cloudinaryUploadImage(imagePath);
+    fs.unlinkSync(imagePath);
+    console.log(result);
+    const updatedPost = await prisma.post.update({
+      where: { id },
+      data: {
+        image: result?.secure_url,
+        imageId: result?.public_id,
+      },
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        updatedPost,
+      },
+    });
+  }
+);
+
+export const searchPost = catchAsync(
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const { title } = req.query;
+
+    if (title) {
+      const posts = prisma.post.findMany({
+        where: {
+          title: {
+            contains: title.toString(),
+          },
+        },
+      });
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          posts,
+        },
+      });
+    } else {
+      return next(
+        new AppError('not found posts, please search using title name.', 404)
+      );
+    }
+  }
 );
